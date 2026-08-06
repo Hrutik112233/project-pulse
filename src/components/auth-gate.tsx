@@ -6,16 +6,41 @@ import { useCurrentProfile, useSession, type AppRole } from "@/hooks/useAuth";
 
 export type GatedUser = { profileId: string; name: string; role: AppRole };
 
-export function AuthGate({ children }: { children: (user: GatedUser) => ReactNode }) {
+export const ADMIN_ROLES: AppRole[] = ["super_admin", "admin"];
+export const MEMBER_ROLES: AppRole[] = ["member"];
+
+export function homeForRole(role: AppRole) {
+  return ADMIN_ROLES.includes(role) ? "/dashboard" : "/my-work";
+}
+
+export function AuthGate({
+  children,
+  allow,
+  portal = "member",
+}: {
+  children: (user: GatedUser) => ReactNode;
+  /** Roles allowed into this module. Defaults to everyone signed in. */
+  allow?: AppRole[];
+  /** Which login screen unauthenticated visitors are sent to. */
+  portal?: "admin" | "member";
+}) {
   const navigate = useNavigate();
   const { session, loading } = useSession();
   const { data, isLoading } = useCurrentProfile(session);
 
-  useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth", replace: true });
-  }, [loading, session, navigate]);
+  const loginPath = portal === "admin" ? "/admin-login" : "/auth";
+  const role = data?.role;
+  const allowed = !allow || (role ? allow.includes(role) : false);
 
-  if (loading || !session || isLoading || !data?.profile) {
+  useEffect(() => {
+    if (!loading && !session) navigate({ to: loginPath, replace: true });
+  }, [loading, session, navigate, loginPath]);
+
+  useEffect(() => {
+    if (role && !allowed) navigate({ to: homeForRole(role), replace: true });
+  }, [role, allowed, navigate]);
+
+  if (loading || !session || isLoading || !data?.profile || !allowed) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <Loader2 className="size-6 animate-spin text-primary" />
