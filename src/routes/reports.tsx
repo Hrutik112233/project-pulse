@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { AppShell } from "@/components/app-shell";
-import { AuthGate } from "@/components/auth-gate";
+import { ADMIN_ROLES, AuthGate } from "@/components/auth-gate";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -56,7 +56,7 @@ const tooltipStyle = {
 
 function ReportsRoute() {
   return (
-    <AuthGate>
+    <AuthGate allow={ADMIN_ROLES} portal="admin">
       {(user) => (
         <AppShell
           userName={user.name}

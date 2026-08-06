@@ -29,6 +29,20 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+async function resolveHome(userId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const { data: roles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("profile_id", profile?.id ?? "");
+  const isAdmin = (roles ?? []).some((r) => r.role === "super_admin" || r.role === "admin");
+  return isAdmin ? "/dashboard" : "/my-work";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("signin");
@@ -38,21 +52,23 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) navigate({ to: await resolveHome(data.session.user.id), replace: true });
     });
   }, [navigate]);
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      setBusy(false);
+      toast.error(error?.message ?? "Sign in failed.");
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    const home = await resolveHome(data.user.id);
+    setBusy(false);
+    navigate({ to: home, replace: true });
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -75,7 +91,7 @@ function AuthPage() {
       toast.success("Check your inbox to confirm your email address.");
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: "/my-work", replace: true });
   }
 
   async function handleReset() {
@@ -119,7 +135,11 @@ function AuthPage() {
         <div className="w-full max-w-sm">
           <h1 className="font-display text-2xl font-semibold">Welcome back</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign in with your work email to continue.
+            Team member portal. Admins sign in on the{" "}
+            <Link to="/admin-login" className="text-primary underline-offset-4 hover:underline">
+              admin portal
+            </Link>
+            .
           </p>
 
           <Tabs value={mode} onValueChange={setMode} className="mt-6">

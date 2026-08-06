@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
-import { AuthGate } from "@/components/auth-gate";
+import { ADMIN_ROLES, AuthGate } from "@/components/auth-gate";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpdateCard } from "@/components/dashboard/update-card";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/calendar")({
 
 function CalendarRoute() {
   return (
-    <AuthGate>
+    <AuthGate allow={ADMIN_ROLES} portal="admin">
       {(user) => (
         <AppShell
           userName={user.name}
