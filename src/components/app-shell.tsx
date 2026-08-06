@@ -7,6 +7,7 @@ import {
   CalendarDays,
   BarChart3,
   LogOut,
+  ListChecks,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,13 +15,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+const ADMIN_NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/people", label: "People", icon: Users },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/reports", label: "Reports", icon: BarChart3 },
-];
+] as const;
+
+const MEMBER_NAV = [
+  { to: "/my-work", label: "My work", icon: ListChecks },
+] as const;
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
@@ -45,6 +50,9 @@ export function AppShell({
 }) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdmin = role === "super_admin" || role === "admin";
+  const nav = isAdmin ? ADMIN_NAV : MEMBER_NAV;
+  const portalLabel = isAdmin ? "Admin portal" : "Team portal";
 
   const initials = userName
     .split(" ")
@@ -55,7 +63,7 @@ export function AppShell({
 
   async function signOut() {
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: isAdmin ? "/admin-login" : "/auth", replace: true });
   }
 
   return (
@@ -69,9 +77,12 @@ export function AppShell({
             Northlight
           </span>
         </Link>
+        <p className="mb-3 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          {portalLabel}
+        </p>
 
         <nav className="flex flex-1 flex-col gap-1">
-          {NAV.map(({ to, label, icon: Icon }) => {
+          {nav.map(({ to, label, icon: Icon }) => {
             const active = pathname === to;
             return (
               <Link

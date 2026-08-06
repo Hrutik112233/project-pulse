@@ -26,7 +26,7 @@ import {
   Gauge,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { AuthGate } from "@/components/auth-gate";
+import { ADMIN_ROLES, AuthGate } from "@/components/auth-gate";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { UpdateCard } from "@/components/dashboard/update-card";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ const tooltipStyle = {
 
 function DashboardRoute() {
   return (
-    <AuthGate>
+    <AuthGate allow={ADMIN_ROLES} portal="admin">
       {(user) => (
         <AppShell
           userName={user.name}

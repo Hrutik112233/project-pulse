@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
-import { AuthGate } from "@/components/auth-gate";
+import { ADMIN_ROLES, AuthGate } from "@/components/auth-gate";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +45,7 @@ const PRIORITY_TONE: Record<string, string> = {
 
 function ProjectsRoute() {
   return (
-    <AuthGate>
+    <AuthGate allow={ADMIN_ROLES} portal="admin">
       {(user) => (
         <AppShell
           userName={user.name}

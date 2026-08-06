@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
-import { AuthGate } from "@/components/auth-gate";
+import { ADMIN_ROLES, AuthGate } from "@/components/auth-gate";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,7 +45,7 @@ function presenceOf(lastSeen: string | null) {
 
 function PeopleRoute() {
   return (
-    <AuthGate>
+    <AuthGate allow={ADMIN_ROLES} portal="admin">
       {(user) => (
         <AppShell
           userName={user.name}
