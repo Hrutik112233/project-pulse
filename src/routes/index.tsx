@@ -44,9 +44,15 @@ function Landing() {
           </span>
           <span className="font-display text-lg font-semibold">Northlight</span>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/auth">Sign in</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/admin-login">Admin sign in</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/auth">Team sign in</Link>
+          </Button>
+        </div>
+
       </header>
 
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-10">
