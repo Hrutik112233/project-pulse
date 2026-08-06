@@ -71,11 +71,15 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link to="/auth">
-                Open the console <ArrowRight className="size-4" />
+              <Link to="/admin-login">
+                Admin portal <ArrowRight className="size-4" />
               </Link>
             </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/auth">Team member portal</Link>
+            </Button>
           </div>
+
         </section>
 
         <section className="mt-16 grid gap-4 sm:grid-cols-3">
