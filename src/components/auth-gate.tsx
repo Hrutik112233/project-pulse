@@ -7,11 +7,17 @@ import { useCurrentProfile, useSession, type AppRole } from "@/hooks/useAuth";
 export type GatedUser = { profileId: string; name: string; role: AppRole };
 
 export const ADMIN_ROLES: AppRole[] = ["super_admin", "admin"];
+export const LEADER_ROLES: AppRole[] = ["team_leader"];
 export const MEMBER_ROLES: AppRole[] = ["member"];
+export const STAFF_ROLES: AppRole[] = ["super_admin", "admin", "team_leader"];
+export const ALL_ROLES: AppRole[] = ["super_admin", "admin", "team_leader", "member"];
 
 export function homeForRole(role: AppRole) {
-  return ADMIN_ROLES.includes(role) ? "/dashboard" : "/my-work";
+  if (ADMIN_ROLES.includes(role)) return "/dashboard";
+  if (role === "team_leader") return "/team";
+  return "/my-work";
 }
+
 
 export function AuthGate({
   children,
