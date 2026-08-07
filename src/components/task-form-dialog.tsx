@@ -74,14 +74,20 @@ export function TaskFormDialog({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim()) return toast.error("Task title is required.");
-    if (!projectId) return toast.error("Pick a project.");
+    if (!title.trim()) {
+      toast.error("Task title is required.");
+      return;
+    }
+    if (!projectId) {
+      toast.error("Pick a project.");
+      return;
+    }
     const numericProgress = Math.min(100, Math.max(0, Number(progress) || 0));
 
     setBusy(true);
     const payload = {
       title: title.trim(),
-      description: description.trim() || undefined,
+      description: description.trim() || null,
       project_id: projectId,
       assigned_member_id: assignee === NONE ? null : assignee,
       team_leader_id: leader === NONE ? null : leader,

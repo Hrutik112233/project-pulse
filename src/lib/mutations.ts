@@ -55,7 +55,7 @@ export async function recalcProject(projectId: string) {
 
 export type TaskInput = {
   title: string;
-  description?: string;
+  description?: string | null;
   project_id: string;
   assigned_member_id?: string | null;
   team_leader_id?: string | null;
@@ -73,7 +73,6 @@ export async function createTask(actor: Actor, input: TaskInput) {
     .from("tasks")
     .insert({
       ...input,
-      description: input.description ?? null,
       progress: input.progress ?? 0,
       created_by: actor.profileId,
       attachments: input.attachments ?? [],
