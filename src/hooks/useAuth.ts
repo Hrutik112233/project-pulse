@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureProfile } from "@/lib/session.functions";
 
-export type AppRole = "super_admin" | "admin" | "member";
+export type AppRole = "super_admin" | "admin" | "team_leader" | "member";
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
@@ -25,6 +25,8 @@ export function useSession() {
   return { session, loading };
 }
 
+const RANK: Record<string, number> = { super_admin: 4, admin: 3, team_leader: 2, member: 1 };
+
 export function useCurrentProfile(session: Session | null) {
   return useQuery({
     queryKey: ["current-profile", session?.user.id],
@@ -43,12 +45,9 @@ export function useCurrentProfile(session: Session | null) {
         .select("role")
         .eq("profile_id", profile?.id ?? "");
 
-      const roleList = (roles ?? []).map((r) => r.role as AppRole);
-      const role: AppRole = roleList.includes("super_admin")
-        ? "super_admin"
-        : roleList.includes("admin")
-          ? "admin"
-          : "member";
+      const role = ((roles ?? []).map((r) => r.role as AppRole).sort(
+        (a, b) => (RANK[b] ?? 0) - (RANK[a] ?? 0),
+      )[0] ?? "member") as AppRole;
 
       return { profile, role };
     },

@@ -103,6 +103,47 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          message: string
+          profile_id: string
+          read: boolean
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          message: string
+          profile_id: string
+          read?: boolean
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          message?: string
+          profile_id?: string
+          read?: boolean
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -114,6 +155,7 @@ export type Database = {
           is_active: boolean
           job_title: string | null
           last_seen_at: string | null
+          team_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -127,6 +169,7 @@ export type Database = {
           is_active?: boolean
           job_title?: string | null
           last_seen_at?: string | null
+          team_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -140,10 +183,19 @@ export type Database = {
           is_active?: boolean
           job_title?: string | null
           last_seen_at?: string | null
+          team_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       progress_updates: {
         Row: {
@@ -359,52 +411,103 @@ export type Database = {
         }
         Relationships: []
       }
+      task_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_admin_id: string | null
           assigned_member_id: string | null
+          attachments: string[]
           completed_at: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           due_date: string | null
           id: string
+          notes: string | null
           priority: Database["public"]["Enums"]["priority_level"]
           progress: number
           project_id: string
           start_date: string | null
           status: Database["public"]["Enums"]["task_status"]
+          team_leader_id: string | null
           title: string
           updated_at: string
         }
         Insert: {
           assigned_admin_id?: string | null
           assigned_member_id?: string | null
+          attachments?: string[]
           completed_at?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          notes?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           progress?: number
           project_id: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["task_status"]
+          team_leader_id?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           assigned_admin_id?: string | null
           assigned_member_id?: string | null
+          attachments?: string[]
           completed_at?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          notes?: string | null
           priority?: Database["public"]["Enums"]["priority_level"]
           progress?: number
           project_id?: string
           start_date?: string | null
           status?: Database["public"]["Enums"]["task_status"]
+          team_leader_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -424,10 +527,59 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_team_leader_id_fkey"
+            columns: ["team_leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          leader_id: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          leader_id?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          leader_id?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -473,7 +625,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "admin" | "member"
+      app_role: "super_admin" | "admin" | "member" | "team_leader"
       presence_status: "online" | "idle" | "offline"
       priority_level: "low" | "medium" | "high" | "critical"
       project_status:
@@ -492,6 +644,9 @@ export type Database = {
         | "completed"
         | "rejected"
         | "blocked"
+        | "pending_approval"
+        | "assigned"
+        | "overdue"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -619,7 +774,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "admin", "member"],
+      app_role: ["super_admin", "admin", "member", "team_leader"],
       presence_status: ["online", "idle", "offline"],
       priority_level: ["low", "medium", "high", "critical"],
       project_status: [
@@ -639,6 +794,9 @@ export const Constants = {
         "completed",
         "rejected",
         "blocked",
+        "pending_approval",
+        "assigned",
+        "overdue",
       ],
     },
   },
