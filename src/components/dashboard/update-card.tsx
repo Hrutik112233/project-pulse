@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { Github, ExternalLink, Images } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { STATUS_LABELS } from "@/lib/analytics";
+import { resolveScreenshotUrls } from "@/lib/work-uploads";
+
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
