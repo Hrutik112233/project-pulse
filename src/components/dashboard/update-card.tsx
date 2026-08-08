@@ -124,3 +124,37 @@ function Chip({
     </span>
   );
 }
+
+function ScreenshotStrip({ paths }: { paths: string[] }) {
+  const [urls, setUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    if (!paths.length) {
+      setUrls([]);
+      return;
+    }
+    resolveScreenshotUrls(paths)
+      .then((u) => active && setUrls(u))
+      .catch(() => active && setUrls([]));
+    return () => {
+      active = false;
+    };
+  }, [paths]);
+
+  if (!urls.length) return null;
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {urls.map((url, i) => (
+        <a key={url} href={url} target="_blank" rel="noreferrer">
+          <img
+            src={url}
+            alt={`Work screenshot ${i + 1}`}
+            loading="lazy"
+            className="size-20 rounded-md border border-border object-cover transition hover:opacity-80"
+          />
+        </a>
+      ))}
+    </div>
+  );
+}
