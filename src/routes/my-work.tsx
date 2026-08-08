@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchOrganisationData, STATUS_LABELS } from "@/lib/analytics";
+import { fetchWorkspace, type AppRole } from "@/lib/workspace";
+import { SubmitWorkDialog } from "@/components/submit-work-dialog";
+import { NotificationBell } from "@/components/notification-bell";
 
 export const Route = createFileRoute("/my-work")({
   head: () => ({
@@ -40,11 +43,43 @@ function MyWorkRoute() {
           role={user.role}
           title="My work"
           subtitle="Tasks assigned to you and your progress history"
+          actions={
+            <div className="flex items-center gap-2">
+              <NotificationBell profileId={user.profileId} />
+              <UploadWorkAction
+                profileId={user.profileId}
+                name={user.name}
+                role={user.role as AppRole}
+              />
+            </div>
+          }
         >
           <MyWorkBody profileId={user.profileId} />
         </AppShell>
       )}
     </AuthGate>
+  );
+}
+
+function UploadWorkAction({
+  profileId,
+  name,
+  role,
+}: {
+  profileId: string;
+  name: string;
+  role: AppRole;
+}) {
+  const { data } = useQuery({ queryKey: ["workspace"], queryFn: fetchWorkspace });
+  const myTasks = (data?.tasks ?? []).filter(
+    (t) => t.assigned_member_id === profileId || t.created_by === profileId,
+  );
+  return (
+    <SubmitWorkDialog
+      actor={{ profileId, name, role }}
+      tasks={myTasks}
+      projects={data?.projects ?? []}
+    />
   );
 }
 
