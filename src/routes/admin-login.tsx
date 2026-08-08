@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2, ShieldCheck, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { claimAdminAccess } from "@/lib/registration.functions";
 
 const PENDING_CODE_KEY = "northlight.pending-admin-code";
@@ -47,9 +46,10 @@ async function isAdminUser(userId: string) {
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("signin");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,9 +60,7 @@ function AdminLoginPage() {
     });
   }, [navigate]);
 
-  async function handleSignIn(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
+  async function handleSignIn() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
       setBusy(false);
@@ -95,9 +93,7 @@ function AdminLoginPage() {
     navigate({ to: "/dashboard", replace: true });
   }
 
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
+  async function handleSignUp() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -133,6 +129,13 @@ function AdminLoginPage() {
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    if (mode === "signin") await handleSignIn();
+    else await handleSignUp();
+  }
+
   async function handleReset() {
     if (!email) {
       toast.error("Enter your admin email first.");
@@ -149,139 +152,153 @@ function AdminLoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="hidden flex-col justify-between border-r border-border bg-sidebar p-10 lg:flex">
-        <Link to="/" className="flex items-center gap-2">
+    <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div className="w-full max-w-sm">
+        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <span className="bg-gradient-amber grid size-8 place-items-center rounded-md font-display text-sm font-bold text-primary-foreground">
             N
           </span>
           <span className="font-display text-lg font-semibold">Northlight</span>
         </Link>
-        <div className="max-w-md">
-          <h2 className="font-display text-3xl font-semibold leading-tight">
-            Admin <span className="text-gradient-amber">control centre</span> for the whole
-            portfolio.
-          </h2>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Organisation analytics, project ownership, people management and delivery reporting —
-            restricted to super admins and project admins.
-          </p>
-        </div>
-        <p className="text-xs text-muted-foreground">Restricted module · RBAC enforced</p>
-      </div>
 
-      <div className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 px-3 py-1 text-xs font-medium text-primary">
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/40 px-3 py-1 text-xs font-medium text-primary">
             <ShieldCheck className="size-3.5" /> Admin portal
           </div>
           <h1 className="font-display text-2xl font-semibold">Administrator access</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Admin accounts only. Team members use the{" "}
-            <Link to="/auth" className="text-primary underline-offset-4 hover:underline">
-              team portal
-            </Link>
-            .
+            {mode === "signin" ? "Sign in with your admin account." : "Register a new admin ID."}
           </p>
 
-          <Tabs value={mode} onValueChange={setMode} className="mt-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Create admin ID</TabsTrigger>
-            </TabsList>
+          <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted/40 p-1">
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+                mode === "signin"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("signup")}
+              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+                mode === "signup"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Create admin ID
+            </button>
+          </div>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-email">Admin email</Label>
-                  <Input
-                    id="admin-email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@company.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-password">Password</Label>
-                  <Input
-                    id="admin-password"
-                    type="password"
-                    required
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy && <Loader2 className="size-4 animate-spin" />} Enter admin portal
-                </Button>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-name">Full name</Label>
+                <Input
+                  id="admin-name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Alex Morgan"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="admin-email">Admin email</Label>
+              <Input
+                id="admin-email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@company.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="admin-password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={mode === "signup" ? 8 : undefined}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
+                />
                 <button
                   type="button"
-                  onClick={handleReset}
-                  className="w-full text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
                 >
-                  Forgot your password?
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
-              </form>
-            </TabsContent>
+              </div>
+            </div>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-name">Full name</Label>
-                  <Input
-                    id="admin-name"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Alex Morgan"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-signup-email">Admin email</Label>
-                  <Input
-                    id="admin-signup-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-signup-password">Password</Label>
-                  <Input
-                    id="admin-signup-password"
-                    type="password"
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-invite">Admin invite code</Label>
-                  <Input
-                    id="admin-invite"
-                    required
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    placeholder="Provided by your super admin"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Admin rights are only granted when this code matches your organisation's code.
-                  </p>
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy && <Loader2 className="size-4 animate-spin" />} Create admin account
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="admin-invite">Admin invite code</Label>
+                <Input
+                  id="admin-invite"
+                  required
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  placeholder="Provided by your super admin"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Admin rights are granted only when this code matches your organisation's code.
+                </p>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={busy}>
+              {busy && <Loader2 className="size-4 animate-spin" />}
+              {mode === "signin" ? "Enter admin portal" : "Create admin account"}
+            </Button>
+          </form>
+
+          <div className="mt-4 flex items-center justify-between text-xs">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Forgot password?
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {mode === "signin" ? "Create admin ID" : "Back to sign in"}
+            </button>
+          </div>
         </div>
+
+        <Link
+          to="/auth"
+          className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+        >
+          <Users className="size-4 text-primary" /> Team member? Go to team portal
+        </Link>
+
+        <Link
+          to="/"
+          className="mt-3 block text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+        >
+          Back to home
+        </Link>
       </div>
     </div>
   );

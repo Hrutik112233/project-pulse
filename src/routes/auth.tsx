@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Northlight Project Control" },
+      { title: "Team sign in — Northlight Project Control" },
       {
         name: "description",
         content:
-          "Sign in to Northlight to manage projects, admins, team members and delivery progress.",
+          "Sign in to the Northlight team portal to view assigned tasks, submit progress and track delivery.",
       },
-      { property: "og:title", content: "Sign in — Northlight Project Control" },
+      { property: "og:title", content: "Team sign in — Northlight Project Control" },
       {
         property: "og:description",
         content: "Secure access to your organisation's project delivery workspace.",
@@ -39,15 +38,18 @@ async function resolveHome(userId: string) {
     .from("user_roles")
     .select("role")
     .eq("profile_id", profile?.id ?? "");
-  const isAdmin = (roles ?? []).some((r) => r.role === "super_admin" || r.role === "admin");
-  return isAdmin ? "/dashboard" : "/my-work";
+  const list = (roles ?? []).map((r) => r.role as string);
+  if (list.includes("super_admin") || list.includes("admin")) return "/dashboard";
+  if (list.includes("team_leader")) return "/team";
+  return "/my-work";
 }
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("signin");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -57,28 +59,28 @@ function AuthPage() {
     });
   }, [navigate]);
 
-  async function handleSignIn(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) {
+
+    if (mode === "signin") {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        setBusy(false);
+        toast.error(error?.message ?? "Sign in failed.");
+        return;
+      }
+      const home = await resolveHome(data.user.id);
       setBusy(false);
-      toast.error(error?.message ?? "Sign in failed.");
+      navigate({ to: home, replace: true });
       return;
     }
-    const home = await resolveHome(data.user.id);
-    setBusy(false);
-    navigate({ to: home, replace: true });
-  }
 
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth`,
         data: { full_name: fullName },
       },
     });
@@ -88,7 +90,8 @@ function AuthPage() {
       return;
     }
     if (!data.session) {
-      toast.success("Check your inbox to confirm your email address.");
+      toast.success("Check your inbox to confirm your email address, then sign in.");
+      setMode("signin");
       return;
     }
     navigate({ to: "/my-work", replace: true });
@@ -110,123 +113,134 @@ function AuthPage() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="hidden flex-col justify-between border-r border-border bg-sidebar p-10 lg:flex">
-        <Link to="/" className="flex items-center gap-2">
+    <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div className="w-full max-w-sm">
+        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <span className="bg-gradient-amber grid size-8 place-items-center rounded-md font-display text-sm font-bold text-primary-foreground">
             N
           </span>
           <span className="font-display text-lg font-semibold">Northlight</span>
         </Link>
-        <div className="max-w-md">
-          <h2 className="font-display text-3xl font-semibold leading-tight">
-            One <span className="text-gradient-amber">shared timeline</span> for every project,
-            admin and team member.
-          </h2>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Track module-level progress, deadlines at risk and daily delivery activity across the
-            whole organisation.
-          </p>
-        </div>
-        <p className="text-xs text-muted-foreground">Enterprise delivery control · RBAC secured</p>
-      </div>
 
-      <div className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-sm">
-          <h1 className="font-display text-2xl font-semibold">Welcome back</h1>
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h1 className="font-display text-2xl font-semibold">Team portal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Team member portal. Admins sign in on the{" "}
-            <Link to="/admin-login" className="text-primary underline-offset-4 hover:underline">
-              admin portal
-            </Link>
-            .
+            {mode === "signin" ? "Sign in to your workspace." : "Create your team member account."}
           </p>
 
-          <Tabs value={mode} onValueChange={setMode} className="mt-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign in</TabsTrigger>
-              <TabsTrigger value="signup">Create account</TabsTrigger>
-            </TabsList>
+          <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted/40 p-1">
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+                mode === "signin"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("signup")}
+              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+                mode === "signup"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Create account
+            </button>
+          </div>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Work email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy && <Loader2 className="size-4 animate-spin" />} Sign in
-                </Button>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            {mode === "signup" && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full name</Label>
+                <Input
+                  id="name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Alex Morgan"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Work email</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={mode === "signup" ? 8 : undefined}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
+                />
                 <button
                   type="button"
-                  onClick={handleReset}
-                  className="w-full text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
                 >
-                  Forgot your password?
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
-              </form>
-            </TabsContent>
+              </div>
+            </div>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full name</Label>
-                  <Input
-                    id="name"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Alex Morgan"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Work email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={busy}>
-                  {busy && <Loader2 className="size-4 animate-spin" />} Create account
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+            <Button type="submit" className="w-full" disabled={busy}>
+              {busy && <Loader2 className="size-4 animate-spin" />}
+              {mode === "signin" ? "Sign in" : "Create account"}
+            </Button>
+          </form>
+
+          <div className="mt-4 flex items-center justify-between text-xs">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Forgot password?
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {mode === "signin" ? "New here? Create account" : "Already have an account?"}
+            </button>
+          </div>
         </div>
+
+        <Link
+          to="/admin-login"
+          className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+        >
+          <ShieldCheck className="size-4 text-primary" /> Admin? Go to admin portal
+        </Link>
+
+        <Link
+          to="/"
+          className="mt-3 block text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+        >
+          Back to home
+        </Link>
       </div>
     </div>
   );
