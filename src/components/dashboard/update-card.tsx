@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { Github, ExternalLink, Images } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { STATUS_LABELS } from "@/lib/analytics";
+import { resolveScreenshotUrls } from "@/lib/work-uploads";
+
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
@@ -83,8 +86,11 @@ export function UpdateCard({ item }: { item: TimelineItem }) {
               }
             />
           </div>
+
+          <ScreenshotStrip paths={item.screenshots} />
         </div>
       </div>
+
     </article>
   );
 }
@@ -116,5 +122,39 @@ function Chip({
     <span className={`${base} text-muted-foreground`}>
       <Icon className="size-3.5" /> {label}
     </span>
+  );
+}
+
+function ScreenshotStrip({ paths }: { paths: string[] }) {
+  const [urls, setUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    if (!paths.length) {
+      setUrls([]);
+      return;
+    }
+    resolveScreenshotUrls(paths)
+      .then((u) => active && setUrls(u))
+      .catch(() => active && setUrls([]));
+    return () => {
+      active = false;
+    };
+  }, [paths]);
+
+  if (!urls.length) return null;
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {urls.map((url, i) => (
+        <a key={url} href={url} target="_blank" rel="noreferrer">
+          <img
+            src={url}
+            alt={`Work screenshot ${i + 1}`}
+            loading="lazy"
+            className="size-20 rounded-md border border-border object-cover transition hover:opacity-80"
+          />
+        </a>
+      ))}
+    </div>
   );
 }
