@@ -86,8 +86,11 @@ export function UpdateCard({ item }: { item: TimelineItem }) {
               }
             />
           </div>
+
+          <ScreenshotStrip paths={item.screenshots} />
         </div>
       </div>
+
     </article>
   );
 }
