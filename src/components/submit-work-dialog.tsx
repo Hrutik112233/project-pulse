@@ -97,10 +97,18 @@ export function SubmitWorkDialog({
   const validUrl = (v: string) => !v || /^https?:\/\/\S+$/i.test(v.trim());
 
   async function handleSubmit() {
-    if (!resolvedProject) return toast.error("Choose a task or project");
-    if (!title.trim()) return toast.error("Add a work title");
-    if (!validUrl(github) || !validUrl(live))
-      return toast.error("Links must start with http:// or https://");
+    if (!resolvedProject) {
+      toast.error("Choose a task or project");
+      return;
+    }
+    if (!title.trim()) {
+      toast.error("Add a work title");
+      return;
+    }
+    if (!validUrl(github) || !validUrl(live)) {
+      toast.error("Links must start with http:// or https://");
+      return;
+    }
 
     setBusy(true);
     try {
