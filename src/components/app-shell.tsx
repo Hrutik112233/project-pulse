@@ -8,6 +8,7 @@ import {
   BarChart3,
   LogOut,
   ListChecks,
+  UsersRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const ADMIN_NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/people", label: "People", icon: Users },
+  { to: "/teams", label: "Teams", icon: UsersRound },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/reports", label: "Reports", icon: BarChart3 },
 ] as const;
