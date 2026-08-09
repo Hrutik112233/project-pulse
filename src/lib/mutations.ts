@@ -316,6 +316,22 @@ export async function setPersonActive(actor: Actor, id: string, name: string, ac
   });
 }
 
+export async function setPersonTeam(
+  actor: Actor,
+  id: string,
+  name: string,
+  teamId: string | null,
+) {
+  const { error } = await supabase.from("profiles").update({ team_id: teamId }).eq("id", id);
+  if (error) throw new Error(error.message);
+  await logActivity({
+    actorId: actor.profileId,
+    action: teamId ? `assigned "${name}" to a team` : `removed "${name}" from their team`,
+    entityType: "user",
+    entityId: id,
+  });
+}
+
 /* ---------- Teams ---------- */
 
 export async function saveTeam(
