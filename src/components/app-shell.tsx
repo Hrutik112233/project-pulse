@@ -156,7 +156,33 @@ export function AppShell({
           <div className="flex items-center gap-2">{actions}</div>
         </header>
 
+        <nav className="flex gap-1 overflow-x-auto border-b border-border bg-background/70 px-3 py-2 lg:hidden">
+          {nav.map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                pathname === to
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60",
+              )}
+            >
+              <Icon className="size-3.5" />
+              {label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={signOut}
+            className="ml-auto flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground"
+          >
+            <LogOut className="size-3.5" /> Sign out
+          </button>
+        </nav>
+
         <main className="flex-1 px-5 py-6">{children}</main>
+
       </div>
     </div>
   );
