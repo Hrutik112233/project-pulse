@@ -68,8 +68,10 @@ export function AppShell({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = role === "super_admin" || role === "admin";
-  const nav = isAdmin ? ADMIN_NAV : MEMBER_NAV;
-  const portalLabel = isAdmin ? "Admin portal" : "Team portal";
+  const isLeader = role === "team_leader";
+  const nav = isAdmin ? ADMIN_NAV : isLeader ? LEADER_NAV : MEMBER_NAV;
+  const portalLabel = isAdmin ? "Admin portal" : isLeader ? "Team leader portal" : "Team portal";
+
 
   const initials = userName
     .split(" ")
