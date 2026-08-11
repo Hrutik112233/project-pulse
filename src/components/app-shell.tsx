@@ -9,6 +9,9 @@ import {
   LogOut,
   ListChecks,
   UsersRound,
+  ClipboardList,
+  History,
+  UserCog,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,10 +22,20 @@ import { cn } from "@/lib/utils";
 const ADMIN_NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/tasks", label: "Tasks", icon: ClipboardList },
   { to: "/people", label: "People", icon: Users },
+  { to: "/users", label: "User management", icon: UserCog },
   { to: "/teams", label: "Teams", icon: UsersRound },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/history", label: "Activity history", icon: History },
+] as const;
+
+const LEADER_NAV = [
+  { to: "/team", label: "My team", icon: UsersRound },
+  { to: "/tasks", label: "Tasks", icon: ClipboardList },
+  { to: "/history", label: "Activity history", icon: History },
+  { to: "/my-work", label: "My work", icon: ListChecks },
 ] as const;
 
 const MEMBER_NAV = [
@@ -32,8 +45,10 @@ const MEMBER_NAV = [
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
   admin: "Admin",
+  team_leader: "Team Leader",
   member: "Team Member",
 };
+
 
 export function AppShell({
   children,
