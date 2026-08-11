@@ -9,6 +9,9 @@ import {
   LogOut,
   ListChecks,
   UsersRound,
+  ClipboardList,
+  History,
+  UserCog,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,10 +22,20 @@ import { cn } from "@/lib/utils";
 const ADMIN_NAV = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/tasks", label: "Tasks", icon: ClipboardList },
   { to: "/people", label: "People", icon: Users },
+  { to: "/users", label: "User management", icon: UserCog },
   { to: "/teams", label: "Teams", icon: UsersRound },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/history", label: "Activity history", icon: History },
+] as const;
+
+const LEADER_NAV = [
+  { to: "/team", label: "My team", icon: UsersRound },
+  { to: "/tasks", label: "Tasks", icon: ClipboardList },
+  { to: "/history", label: "Activity history", icon: History },
+  { to: "/my-work", label: "My work", icon: ListChecks },
 ] as const;
 
 const MEMBER_NAV = [
@@ -32,8 +45,10 @@ const MEMBER_NAV = [
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
   admin: "Admin",
+  team_leader: "Team Leader",
   member: "Team Member",
 };
+
 
 export function AppShell({
   children,
@@ -53,8 +68,10 @@ export function AppShell({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = role === "super_admin" || role === "admin";
-  const nav = isAdmin ? ADMIN_NAV : MEMBER_NAV;
-  const portalLabel = isAdmin ? "Admin portal" : "Team portal";
+  const isLeader = role === "team_leader";
+  const nav = isAdmin ? ADMIN_NAV : isLeader ? LEADER_NAV : MEMBER_NAV;
+  const portalLabel = isAdmin ? "Admin portal" : isLeader ? "Team leader portal" : "Team portal";
+
 
   const initials = userName
     .split(" ")
@@ -139,7 +156,33 @@ export function AppShell({
           <div className="flex items-center gap-2">{actions}</div>
         </header>
 
+        <nav className="flex gap-1 overflow-x-auto border-b border-border bg-background/70 px-3 py-2 lg:hidden">
+          {nav.map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                pathname === to
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60",
+              )}
+            >
+              <Icon className="size-3.5" />
+              {label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={signOut}
+            className="ml-auto flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground"
+          >
+            <LogOut className="size-3.5" /> Sign out
+          </button>
+        </nav>
+
         <main className="flex-1 px-5 py-6">{children}</main>
+
       </div>
     </div>
   );
