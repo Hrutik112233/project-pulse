@@ -110,11 +110,14 @@ function AdminLoginPage() {
     }
 
     if (!data.session) {
-      window.localStorage.setItem(PENDING_CODE_KEY, inviteCode);
-      setBusy(false);
-      toast.success("Confirm your email, then sign in here to activate admin access.");
-      setMode("signin");
-      return;
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        window.localStorage.setItem(PENDING_CODE_KEY, inviteCode);
+        setBusy(false);
+        toast.error(signInError.message);
+        setMode("signin");
+        return;
+      }
     }
 
     try {

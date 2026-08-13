@@ -1,0 +1,14 @@
+DELETE FROM public.activity_logs;
+DELETE FROM public.notifications;
+DELETE FROM public.task_comments;
+DELETE FROM public.progress_updates;
+DELETE FROM public.tasks;
+DELETE FROM public.project_admins;
+DELETE FROM public.project_members;
+DELETE FROM public.projects;
+DELETE FROM public.attendance_sessions;
+UPDATE public.profiles SET team_id = NULL;
+UPDATE public.teams SET leader_id = NULL;
+DELETE FROM public.teams;
+DELETE FROM public.user_roles WHERE profile_id IN (SELECT id FROM public.profiles WHERE user_id IS NULL);
+DELETE FROM public.profiles WHERE user_id IS NULL;
