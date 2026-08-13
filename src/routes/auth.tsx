@@ -90,10 +90,14 @@ function AuthPage() {
       return;
     }
     if (!data.session) {
-      toast.success("Check your inbox to confirm your email address, then sign in.");
-      setMode("signin");
-      return;
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        toast.error(signInError.message);
+        setMode("signin");
+        return;
+      }
     }
+    toast.success("Account created.");
     navigate({ to: "/my-work", replace: true });
   }
 
